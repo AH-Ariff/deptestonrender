@@ -1,5 +1,4 @@
 const express = require("express");
-const https = require("https");
 const fs = require("fs");
 const routes = require("./routes");
 const pool = require("./db");
@@ -19,9 +18,6 @@ app.delete("/:id", async (req, res) => {
   res.json({ message: "Post deleted." });
 });
 
-const options = {
-  key: fs.readFileSync("server.key"),
-  cert: fs.readFileSync("server.cert"),
-};
+const PORT = process.env.port || 3000;
 
-https.createServer(options, app).listen(3000);
+app.listen(PORT);
