@@ -65,13 +65,14 @@
       <button>log in</button>
     </form>
 
+    <script src="env.js"></script>
     <script>
       const form = document.querySelector("form");
       const email = document.getElementById("email").value;
       const pass = document.getElementById("pass").value;
       const button = document.querySelector("button");
       const feed = document.querySelector(".feedback");
-      const url = "https://localhost:300";
+      const URL = ENV.ROOT_URL;
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -79,7 +80,7 @@
         const email = document.getElementById("email").value;
         const pass = document.getElementById("pass").value;
         try {
-          const res = await fetch(`${url}/log`, {
+          const res = await fetch(`${URL}/log`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email, pass: pass }),
