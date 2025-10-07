@@ -19,12 +19,9 @@ app.delete("/:id", async (req, res) => {
   res.json({ message: "Post deleted." });
 });
 
-
 const options = {
   key: fs.readFileSync("server.key"),
   cert: fs.readFileSync("server.cert"),
 };
 
-https.createServer(options, app).listen(process.env.PORT, () => {
-  console.log("Server is running on https://localhost:", process.env.PORT);
-});
+https.createServer(options, app).listen(3000);

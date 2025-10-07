@@ -144,21 +144,21 @@ const post = {
 
 const put = {
   async post(req, res) {
-  try {
-    const { id } = req.params;
-    const { content } = req.body;
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
 
-    await pool.query("UPDATE posts SET content = ? WHERE id = ?", [
-      content,
-      id,
-    ]);
-    res.json({ message: "success" });
-  } catch (err) {
-    console.log(err);
-    res.json({ message: "Post update failed!" });
-  }
-},
-}
+      await pool.query("UPDATE posts SET content = ? WHERE id = ?", [
+        content,
+        id,
+      ]);
+      res.json({ message: "success" });
+    } catch (err) {
+      console.log(err);
+      res.json({ message: "Post update failed!" });
+    }
+  },
+};
 
 router.get("/sine", get.sine);
 router.get("/log", get.log);
