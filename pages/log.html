@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <title>log in</title>
+
+    <style>
+      .block {
+        display: block;
+      }
+    </style>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      body {
+        min-height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: black;
+      }
+
+      form {
+        padding: 3rem 2rem;
+        background-color: rgb(43, 43, 43);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      input,
+      button {
+        color: aliceblue;
+        border: 2px solid white;
+        padding: 0.5rem;
+        border-radius: 0.4rem;
+        font-size: 1.1em;
+        background-color: transparent;
+      }
+
+      .feedback {
+        max-width: 300px;
+        padding: 1rem;
+        background-color: rgb(225, 223, 223);
+        position: fixed;
+        border-radius: 0.4rem;
+        font-size: 1.1em;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="feedback"></div>
+    <form>
+      <input type="email" placeholder="Email" id="email" required />
+      <input type="password" placeholder="Password" id="pass" required />
+      <button>log in</button>
+    </form>
+
+    <script>
+      const form = document.querySelector("form");
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("pass").value;
+      const button = document.querySelector("button");
+      const feed = document.querySelector(".feedback");
+      const url = "https://localhost:300";
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const pass = document.getElementById("pass").value;
+        try {
+          const res = await fetch(`${url}/log`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, pass: pass }),
+            credentials: "include",
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            window.location.href = "/dash";
+          } else {
+            showFeed(data.message);
+          }
+        } catch (error) {
+          showFeed("Some error occured.");
+          console.log(error);
+        }
+      });
+
+      function showFeed(message) {
+        feed.innerText = message;
+        feed.classList.add("block");
+
+        setTimeout(() => {
+          feed.classList.remove("block");
+          feed.innerText = "";
+        });
+      }
+    </script>
+  </body>
+</html>

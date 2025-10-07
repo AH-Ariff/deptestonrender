@@ -1,0 +1,21 @@
+# Node modules folder
+node_modules/
+
+# Environment variables (like database passwords)
+.env
+
+# Build output
+dist/
+build/
+
+# System files (unnecessary)
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache/
