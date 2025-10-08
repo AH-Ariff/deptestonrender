@@ -174,7 +174,7 @@ function showPost(text, id, imgUrl) {
     img.onload = () => imgContainer.appendChild(img);
   }
 
-  posts.prepend(container);
+  document.querySelector(".p").prepend(container);
 }
 
 function showFeed(time) {
