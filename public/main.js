@@ -171,7 +171,7 @@ function showPost(text, id, imgUrl) {
     const img = el("img");
     img.className = "post-image";
     img.src = imgUrl;
-    imgContainer.appendChild(img);
+    img.onload = () => imgContainer.appendChild(img);
   }
 
   posts.prepend(container);
