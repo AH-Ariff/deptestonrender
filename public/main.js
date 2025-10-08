@@ -163,11 +163,11 @@ function showPost(text, id, imgUrl) {
   content.innerText = text;
   container.appendChild(content);
 
-  const imgContainer = div();
-  imgContainer.className = "post-image-container";
-  container.appendChild(imgContainer);
-
   if (imgUrl) {
+    const imgContainer = div();
+    imgContainer.className = "post-image-container";
+    container.appendChild(imgContainer);
+
     const img = el("img");
     img.className = "post-image";
     img.src = imgUrl;
