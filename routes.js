@@ -5,7 +5,7 @@ const path = require("path");
 const multer = require("multer");
 const cors = require("cors");
 const session = require("express-session");
-const pool = require("./db");
+const pool = require("./db"); // Your pg pool
 
 router.use(cors());
 router.use(express.json());
@@ -25,22 +25,20 @@ router.use(
   })
 );
 
+// ---------- Multer Storage ----------
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, "images"));
   },
   filename: function (req, file, cb) {
+    const extName = path.extname(file.originalname).slice(1);
     pool
-      .query("insert into file(ext) values(?)", [
-        path.extname(file.originalname).slice(1),
-      ])
+      .query("INSERT INTO file(ext) VALUES($1) RETURNING id", [extName])
       .then((result) => {
-        return result[0];
-      })
-      .then((result) => {
-        req.fileId = result.insertId;
-        req.extName = path.extname(file.originalname).slice(1);
-        cb(null, result.insertId + path.extname(file.originalname));
+        const fileId = result.rows[0].id;
+        req.fileId = fileId;
+        req.extName = extName;
+        cb(null, `${fileId}.${extName}`);
       })
       .catch((err) => {
         console.log(err);
@@ -48,32 +46,37 @@ const storage = multer.diskStorage({
       });
   },
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
+// ---------- GET Handlers ----------
 const get = {
   dash: (req, res) => res.sendFile(path.join(__dirname, "pages", "dash.html")),
 
   log: (req, res) => {
-    if (req.session.user) {
-      return res.redirect("/dash");
-    }
+    if (req.session.user) return res.redirect("/dash");
     res.sendFile(path.join(__dirname, "pages", "log.html"));
   },
 
   async posts(req, res) {
-    const [rows] = await pool.query(
-      "SELECT text,id,created_at,file_id FROM post"
-    );
-    const [result] = await pool.query("SELECT * FROM file");
-    rows.forEach((post) => {
-      const file = result.find((f) => f.id === post.file_id);
-      if (file) {
-        post.url = `image/${file.id}.${file.ext}`;
-      } else {
-        post.url = null;
-      }
-    });
-    res.json(rows);
+    try {
+      const postResult = await pool.query(
+        "SELECT text, id, created_at, file_id FROM post"
+      );
+      const fileResult = await pool.query("SELECT * FROM file");
+
+      const rows = postResult.rows;
+      const files = fileResult.rows;
+
+      rows.forEach((post) => {
+        const file = files.find((f) => f.id === post.file_id);
+        post.url = file ? `image/${file.id}.${file.ext}` : null;
+      });
+
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to fetch posts" });
+    }
   },
 
   sine(req, res) {
@@ -86,23 +89,32 @@ const get = {
   },
 };
 
+// ---------- POST Handlers ----------
 const post = {
   async sine(req, res) {
-    const { name, email, pass } = req.body;
-    const [row] = await pool.query(
-      "SELECT EXISTS (SELECT 1 FROM user WHERE email = ($1)) AS found",
-      [email]
-    );
-    if (row[0].found) {
-      return res.json({ message: "User already exists!" });
+    try {
+      const { name, email, pass } = req.body;
+
+      const existsResult = await pool.query(
+        'SELECT EXISTS (SELECT 1 FROM "user" WHERE email=$1) AS found',
+        [email]
+      );
+
+      if (existsResult.rows[0].found) {
+        return res.json({ message: "User already exists!" });
+      }
+
+      await pool.query(
+        'INSERT INTO "user" (name, email, password) VALUES ($1, $2, $3)',
+        [name, email, pass]
+      );
+
+      req.session.user = { email };
+      res.json({ message: "success" });
+    } catch (err) {
+      console.error(err);
+      res.json({ message: "Registration failed!" });
     }
-    await pool.query("INSERT INTO user (name, email, pass) VALUES ($1,$2,$3)", [
-      name,
-      email,
-      pass,
-    ]);
-    req.session.user = { email: email };
-    res.json({ message: "success" });
   },
 
   log(req, res) {
@@ -111,35 +123,34 @@ const post = {
       res.json({ success: true });
     } catch (error) {
       console.log(error);
-      res.json({
-        success: false,
-        message: "some error occured.",
-      });
+      res.json({ success: false, message: "some error occurred." });
     }
   },
 
   async post(req, res) {
     try {
       const { text } = req.body;
-      const [result] = await pool.query(
-        "INSERT INTO post (text, file_id, email) VALUES (?,?,?)",
+
+      const insertResult = await pool.query(
+        "INSERT INTO post (text, file_id, email) VALUES ($1, $2, $3) RETURNING id",
         [text, req.fileId, req.session.user.email]
       );
 
-      const id = result.insertId;
-      const [rows] = await pool.query(
-        "select text, id, created_at, file_id FROM post where id = ?",
-        [id]
+      const postId = insertResult.rows[0].id;
+
+      const postResult = await pool.query(
+        "SELECT text, id, created_at, file_id FROM post WHERE id=$1",
+        [postId]
       );
 
       const data = {
-        text: rows[0].text,
-        id: rows[0].id,
-        created_at: rows[0].created_at,
+        text: postResult.rows[0].text,
+        id: postResult.rows[0].id,
+        created_at: postResult.rows[0].created_at,
         url: req.fileId ? `image/${req.fileId}.${req.extName}` : null,
       };
 
-      res.json({ message: "success", data: data });
+      res.json({ message: "success", data });
     } catch (err) {
       console.error(err);
       res.json({ message: "Post creation failed!" });
@@ -147,16 +158,15 @@ const post = {
   },
 };
 
+// ---------- PUT Handlers ----------
 const put = {
   async post(req, res) {
     try {
       const { id } = req.params;
       const { content } = req.body;
 
-      await pool.query("UPDATE posts SET content = ($1) WHERE id = ($2)", [
-        content,
-        id,
-      ]);
+      await pool.query("UPDATE post SET text=$1 WHERE id=$2", [content, id]);
+
       res.json({ message: "success" });
     } catch (err) {
       console.log(err);
@@ -165,15 +175,14 @@ const put = {
   },
 };
 
+// ---------- Routes ----------
 router.get("/sine", get.sine);
 router.get("/log", get.log);
 router.post("/sine", post.sine);
 router.post("/log", post.log);
 
 router.use((req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect("/log");
-  }
+  if (!req.session.user) return res.redirect("/log");
   next();
 });
 
