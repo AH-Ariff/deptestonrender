@@ -90,13 +90,13 @@ const post = {
   async sine(req, res) {
     const { name, email, pass } = req.body;
     const [row] = await pool.query(
-      "SELECT EXISTS (SELECT 1 FROM user WHERE email = ?) AS found",
+      "SELECT EXISTS (SELECT 1 FROM user WHERE email = ($1)) AS found",
       [email]
     );
     if (row[0].found) {
       return res.json({ message: "User already exists!" });
     }
-    await pool.query("INSERT INTO user (name, email, pass) VALUES (?,?,?)", [
+    await pool.query("INSERT INTO user (name, email, pass) VALUES ($1,$2,$3)", [
       name,
       email,
       pass,
@@ -153,7 +153,7 @@ const put = {
       const { id } = req.params;
       const { content } = req.body;
 
-      await pool.query("UPDATE posts SET content = ? WHERE id = ?", [
+      await pool.query("UPDATE posts SET content = ($1) WHERE id = ($2)", [
         content,
         id,
       ]);

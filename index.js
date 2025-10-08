@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  const [result] = await pool.query("DELETE FROM posts WHERE id = ?", [id]);
+  const [result] = await pool.query("DELETE FROM posts WHERE id = ($1)", [id]);
   if (result.affectedRows === 0) {
     return res.status(404).json({ message: "Post not found" });
   }
