@@ -12,12 +12,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.delete("/:id", async (req, res) => {
-  const { id } = req.params;
-  const [result] = await pool.query("DELETE FROM posts WHERE id = ($1)", [id]);
-  if (result.affectedRows === 0) {
-    return res.status(404).json({ message: "Post not found" });
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query("DELETE FROM post WHERE id = $1", [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json({ message: "Post deleted." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete post." });
   }
-  res.json({ message: "Post deleted." });
 });
 
 const PORT = process.env.PORT || 3000;
