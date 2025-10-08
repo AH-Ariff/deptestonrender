@@ -175,7 +175,8 @@ form button {
 }
 
 .post-container {
-  /* margin-bottom: 1rem; */
+  display: inline-block;
+  margin: .5rem;
   padding: 1rem;
   max-width: 400px;
   min-height: 100px;

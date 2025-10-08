@@ -198,7 +198,10 @@ function handleCrud(param, id) {
       text.innerText = "This proccess cannot be undone.";
       next.innerText = "Delete";
       cancel.innerText = "Cancel";
-      next.addEventListener("click", () => deletePost(id));
+      next.addEventListener("click", () => {
+        deletePost(id);
+        checkBox.remove();
+      });
       cancel.addEventListener("click", () => checkBox.remove());
   }
   document.body.appendChild(checkBox);
