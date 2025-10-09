@@ -18,8 +18,6 @@ const feedbackBox = get(".feedback-box");
 
 let updateId;
 
-const url = ENV.ROOT_URL || "https://localhost:300";
-
 window.addEventListener("DOMContentLoaded", () => initPosts());
 newBtn.addEventListener("click", () => newPost.classList.add("block"));
 newPost.addEventListener("click", () => newPost.classList.remove("block"));
@@ -58,14 +56,14 @@ updateForm.addEventListener("submit", (e) => {
 //Functions
 async function createPost(formData) {
   try {
-    const res = await fetch(`${url}/post`, {
+    const res = await fetch(`/post`, {
       method: "POST",
       body: formData,
     });
-    console.log(res);
 
     const output = await res.json();
     const { message, data } = output;
+    console.log(output);
 
     if (message === "success") {
       feedbackBox.innerText = "Post created successfully.";
@@ -84,7 +82,7 @@ async function createPost(formData) {
 
 async function deletePost(id) {
   try {
-    const res = await fetch(`${url}/${id}`, { method: "DELETE" });
+    const res = await fetch(`/${id}`, { method: "DELETE" });
     const data = await res.json();
     feedbackBox.innerText = "Post deleted succssfully.";
     document.getElementById(id).remove();
@@ -99,7 +97,7 @@ async function deletePost(id) {
 
 async function updatePost(id, newText) {
   try {
-    const res = await fetch(`${url}/post/${id}`, {
+    const res = await fetch(`/post/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: newText }),
@@ -124,7 +122,7 @@ async function updatePost(id, newText) {
 }
 
 async function initPosts() {
-  const res = await fetch(`${url}/posts`);
+  const res = await fetch(`/posts`);
   const data = await res.json();
 
   if (data[0]) data.forEach((el) => showPost(el.text, el.id, el.url));
@@ -184,15 +182,40 @@ function showFeed(time) {
 
 function handleCrud(param, id) {
   const checkBox = div();
-  checkBox.className = "flex flex-col p-2 bg-white text-black absolute";
+  checkBox.className = `
+  flex flex-col gap-4 p-5 w-72
+  bg-white text-gray-900 shadow-2xl rounded-2xl
+  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+  border border-gray-100
+`;
+
   const text = el("p");
+  text.className = `
+  text-base font-medium text-gray-800 text-center
+  leading-snug tracking-wide
+`;
   checkBox.appendChild(text);
+
   const btns = div();
-  btns.className = "flex justify-end gap-4";
-  const next = el("button");
+  btns.className = "flex justify-end gap-3 mt-2";
+
   const cancel = el("button");
+  cancel.className = `
+  px-3 py-1.5 text-sm font-semibold rounded-lg
+  bg-gray-100 text-gray-700 hover:bg-gray-200
+  active:scale-95 transition-all duration-150
+`;
+
+  const next = el("button");
+  next.className = `
+  px-3 py-1.5 text-sm font-semibold rounded-lg
+  bg-blue-600 text-white hover:bg-blue-700
+  active:scale-95 transition-all duration-150
+`;
+
   btns.append(cancel, next);
   checkBox.append(text, btns);
+
   switch (param) {
     case 4:
       text.innerText = "This proccess cannot be undone.";
