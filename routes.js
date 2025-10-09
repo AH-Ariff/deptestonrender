@@ -181,10 +181,10 @@ router.get("/log", get.log);
 router.post("/sine", post.sine);
 router.post("/log", post.log);
 
-router.use((req, res, next) => {
-  if (!req.session.user) return res.redirect("/log");
-  next();
-});
+// router.use((req, res, next) => {
+//   if (!req.session.user) return res.redirect("/log");
+//   next();
+// });
 
 router.get("/", get.dash);
 router.get("/dash", get.dash);
